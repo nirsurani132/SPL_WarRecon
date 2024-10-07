@@ -1,0 +1,11 @@
+The simulation has started
+Plan ID: 1
+Settlement Name: TelAviv
+planStatus: AVALIABLE
+selectionPolicy: eco
+LifeQualityScore: 0
+EconomyScore: 0
+EnvironmentScore: 0
+PrintPlanStatus 1 COMPLETED
+AddFacility Hospital 4 0 3 3 3 COMPLETED
+SimulateStep 5 COMPLETED

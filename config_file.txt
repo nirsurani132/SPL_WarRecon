@@ -1,0 +1,11 @@
+# settlement <settlement_name> <settlement_type> 
+settlement KfarSaba 0
+settlement TelAviv 2
+settlement BatYam 1
+# facility <facility_name> <category> <price> <lifeq_impact> <eco_impact> <env_impact>
+facility kindergarten 0 3 3 2 1
+facility desalinationPlant 2 4 2 2 3
+facility officeBuilding 1 3 2 5 0
+# plan <settlement_name> <selection_policy>
+plan KfarSaba nve
+plan TelAviv eco

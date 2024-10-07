@@ -1,0 +1,9 @@
+# Ignore .vscode folder
+.vscode/
+.devcontainer/
+
+# Ignore bin folder
+bin/
+
+# Ignore Mac OS system files
+.DS_Store

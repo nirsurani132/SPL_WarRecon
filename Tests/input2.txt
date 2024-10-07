@@ -1,0 +1,5 @@
+planStatus 1
+facility Hospital 0 4 3 3 3
+step 5
+log
+close

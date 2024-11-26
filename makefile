@@ -11,4 +11,3 @@ clean:
 
 cleanObjAndrun:
 	rm -f *.o
-	valgrind --leak-check=full --show-reachable=yes ./bin/simulation config_file.txt

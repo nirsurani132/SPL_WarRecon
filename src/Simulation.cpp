@@ -44,8 +44,10 @@ Simulation::Simulation(const string &configFilePath): isRunning(false), planCoun
                 default:
                     throw invalid_argument("Unknown settlement type: " + arguments[2]);
             }
-            Settlement settlement(arguments[1], type);
-            addSettlement(settlement);
+            Settlement *settlement = new Settlement(arguments[1], type);
+            if(!addSettlement(settlement)){
+                delete settlement;
+            };
         } else if (command == "facility") {
             FacilityCategory category;
             switch(stoi(arguments[2])){
@@ -95,9 +97,9 @@ void Simulation::step(){
     }
 };
 
-bool Simulation::addSettlement(Settlement settlement){
-    for(const Settlement &existingSettlement : settlements){
-        if(existingSettlement.getName() == settlement.getName()){
+bool Simulation::addSettlement(Settlement *settlement){
+    for(const Settlement *existingSettlement : settlements){
+        if(existingSettlement->getName() == settlement->getName()){
             return false;
         }
     }
@@ -106,9 +108,9 @@ bool Simulation::addSettlement(Settlement settlement){
 };
 
 Settlement &Simulation::getSettlement(const string &settlementName){
-    for(Settlement &settlement : settlements){
-        if(settlement.getName() == settlementName){
-            return settlement;
+    for(Settlement *settlement : settlements){
+        if(settlement->getName() == settlementName){
+            return *settlement;
         }
     }
     throw invalid_argument("Settlement not found: " + settlementName);
@@ -125,8 +127,8 @@ bool Simulation::addFacility(FacilityType facility){
 };
 
 bool Simulation::isSettlementExists(const string &settlementName){
-    for(const Settlement &settlement : settlements){
-        if(settlement.getName() == settlementName){
+    for(const Settlement *settlement : settlements){
+        if(settlement->getName() == settlementName){
             return true;
         }
     }
@@ -171,8 +173,8 @@ void Simulation::start(){
         }
         else if(requestedAction == "facility"){
             const string &facilityName = arguments[1];
-            const int facilityPrice = stoi(arguments[2]);
-            const FacilityCategory facilityCategory = FacilityCategory(stoi(arguments[3]));
+            const FacilityCategory facilityCategory = FacilityCategory(stoi(arguments[2]));
+            const int facilityPrice = stoi(arguments[3]);
             const int lifeQualityScore = stoi(arguments[4]);
             const int economyScore = stoi(arguments[5]);
             const int environmentScore = stoi(arguments[6]);
@@ -250,15 +252,22 @@ Simulation::Simulation(const Simulation &other): isRunning(other.isRunning), pla
     for(const BaseAction *action : other.actionsLog){
         actionsLog.push_back(action->clone());
     }
-    for(const Plan &plan : other.plans){
-        plans.push_back(plan);
+    // for(const Plan &plan : other.plans){
+    //     plans.push_back(plan);
+    // }
+    for(const Settlement *settlement : other.settlements){
+        settlements.push_back(new Settlement(*settlement));
     }
-    for(const Settlement &settlement : other.settlements){
-        settlements.push_back(settlement);
-    }
+
     for(const FacilityType &facility : other.facilitiesOptions){
         facilitiesOptions.push_back(facility);
     }
+
+    for(const Plan &plan : other.plans){
+        Settlement &settlement = getSettlement(plan.getSettlement().getName());
+        plans.push_back(Plan(plan.getPlanID(),settlement,plan.getSelectionPolicy()->clone(),this->facilitiesOptions));
+    }
+
 };
 
 //Move constructor
@@ -272,21 +281,38 @@ Simulation& Simulation::operator=(const Simulation &other){
     for(BaseAction *action : actionsLog){
         delete action;
     }
+    for(Settlement *settlement : settlements){
+        delete settlement;
+    }
     actionsLog.clear();
     plans.clear();
+    settlements.clear();
     planCounter = other.planCounter;
     isRunning = other.isRunning;
     for(const BaseAction *action : other.actionsLog){
         actionsLog.push_back(action->clone());
     }
-    for(const Plan &plan : other.plans){
-        plans.push_back(plan);
+
+    for(const Settlement *settlement : other.settlements){
+        settlements.push_back(new Settlement(*settlement));
     }
-    for(const Settlement &settlement : other.settlements){
-        settlements.push_back(settlement);
-    }
+
     for(const FacilityType &facility : other.facilitiesOptions){
         facilitiesOptions.push_back(facility);
+    }
+
+    for(const Plan &plan : other.plans){
+        Settlement &settlement = getSettlement(plan.getSettlement().getName());
+        Plan currPlan = Plan(plan.getPlanID(),settlement,plan.getSelectionPolicy()->clone(),this->facilitiesOptions);
+        //add all facilities 
+        for(Facility *facility : plan.getFacilities()){
+            currPlan.addFacility(new Facility(*facility));
+        }
+        //add all under construction facilities
+        for(Facility *facility : plan.getUnderConstruction()){
+            currPlan.addFacility(new Facility(*facility));
+        }
+        plans.push_back(currPlan);
     }
     return *this;
 };
@@ -298,6 +324,9 @@ Simulation& Simulation::operator=(Simulation &&other){
     }
     for(BaseAction *action : actionsLog){
         delete action;
+    }
+    for(Settlement *settlement : settlements){
+        delete settlement;
     }
     actionsLog.clear();
     plans.clear();
@@ -313,6 +342,9 @@ Simulation& Simulation::operator=(Simulation &&other){
 Simulation::~Simulation(){
     for(BaseAction *action : actionsLog){
         delete action;
+    }
+    for(Settlement *settlement : settlements){
+        delete settlement;
     }
 };
 

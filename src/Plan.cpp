@@ -50,32 +50,34 @@ void Plan::step() {
             this->status = PlanStatus::AVALIABLE;
         }
     }
-
-
-
 }
 
 void Plan::printStatus(){
-    cout << "Plan ID: " << plan_id << endl;
-    cout << "Settlement Name: " << settlement.getName() << endl;
-    cout << "planStatus: " << (status == PlanStatus::AVALIABLE ? "AVALIABLE" : "BUSY") << endl;
-    cout << "selectionPolicy: " << selectionPolicy->toString() << endl;
+    cout << "PlanID: " << plan_id << endl;
+    cout << "SettlementName: " << settlement.getName() << endl;
+    cout << "PlanStatus: " << (status == PlanStatus::AVALIABLE ? "AVALIABLE" : "BUSY") << endl;
+    cout << "SelectionPolicy: " << selectionPolicy->toString() << endl;
     cout << "LifeQualityScore: " << life_quality_score << endl;
     cout << "EconomyScore: " << economy_score << endl;
     cout << "EnvironmentScore: " << environment_score << endl;
     for(Facility *facility: facilities){
-        cout << "facilityName: " + facility->toString() << endl;
-        cout << "facilityStatus: OPERATIONAL" << endl;
+        cout << "FacilityName: " + facility->toString() << endl;
+        cout << "FacilityStatus: OPERATIONAL" << endl;
     }
     for(Facility *facility: underConstruction){
-        cout << "facilityName: " + facility->toString() << endl;
-        cout << "facilityStatus: UNDER_CONSTRUCTION" << endl;
+        cout << "FacilityName: " + facility->toString() << endl;
+        cout << "FacilityStatus: UNDER_CONSTRUCTION" << endl;
     }
 }
 
 const vector<Facility*> &Plan::getFacilities() const {
     return facilities;
 }
+
+const vector<Facility*> &Plan::getUnderConstruction() const {
+    return underConstruction;
+}
+
 void Plan::addFacility(Facility *facility) {
     if(facility->getStatus() == FacilityStatus::UNDER_CONSTRUCTIONS) {
         underConstruction.push_back(facility);
@@ -90,6 +92,30 @@ void Plan::addFacility(Facility *facility) {
 
 const string Plan::toString() const {
     return "Plan ID: " + std::to_string(plan_id) + " Life Quality: " + std::to_string(life_quality_score) + " Economy: " + std::to_string(economy_score) + " Environment: " + std::to_string(environment_score);
+}
+
+const Settlement &Plan::getSettlement() const {
+    return settlement;
+}
+
+const int Plan::getPlanID() const {
+    return plan_id;
+}
+
+const SelectionPolicy *Plan::getSelectionPolicy() const {
+    return selectionPolicy;
+}
+
+tuple<int,int,int> Plan::evaluateScores() {
+    int life_quality_score = this->life_quality_score;
+    int economy_score = this->economy_score;
+    int environment_score = this->environment_score;
+    for(Facility *facility: underConstruction){
+        life_quality_score += facility->getLifeQualityScore();
+        economy_score += facility->getEconomyScore();
+        environment_score += facility->getEnvironmentScore();
+    }
+    return make_tuple(life_quality_score, economy_score, environment_score);
 }
 
 
